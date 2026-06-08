@@ -1,0 +1,29 @@
+{
+  "llm_providers": {
+    "front_model": {
+      "base_url": "https://example.com/v1",
+      "model": "gpt-5.5",
+      "api_key": "replace-with-api-key",
+      "context_window": 200000
+    },
+    "back_model": {
+      "base_url": "https://example.com/v1",
+      "model": "gpt-5.5",
+      "api_key": "replace-with-api-key",
+      "context_window": 200000
+    },
+    "qwen_search": {
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "model": "qwen-plus",
+      "api_key": "replace-with-api-key",
+      "context_window": 32000
+    }
+  },
+  "paths": {
+    "workspace_root": "/path/to/lingxi/workspace",
+    "front_root": "/path/to/lingxi/front",
+    "pptist_root": "/path/to/lingxi/PPTist/dist",
+    "ppt_master_root": "/path/to/lingxi/ppt-master"
+  },
+  "ppt_pipeline_v2": false
+}

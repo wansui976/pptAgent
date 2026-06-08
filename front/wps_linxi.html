@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WPS 灵犀 - AI PPT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0eeea; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 24px 16px; gap: 32px; }
+
+  /* ===== PAGE TABS ===== */
+  .page-tabs { display: flex; gap: 0; background: #fff; border-radius: 10px; border: 1px solid #e0ddd6; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+  .page-tab { padding: 9px 22px; font-size: 13px; cursor: pointer; color: #888; border: none; background: transparent; transition: all .15s; }
+  .page-tab.active { background: #6c5ce7; color: #fff; }
+  .page-tab:not(.active):hover { background: #f5f4f0; }
+
+  /* ===== WINDOW WRAPPER ===== */
+  .window { width: 960px; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #d9d6ce; box-shadow: 0 4px 24px rgba(0,0,0,.12); display: none; }
+  .window.active { display: flex; flex-direction: column; }
+
+  /* ===== TITLEBAR ===== */
+  .titlebar { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 44px; background: #f7f6f3; border-bottom: 1px solid #e4e1d8; flex-shrink: 0; }
+  .titlebar-left { display: flex; align-items: center; gap: 10px; }
+  .win-btn { width: 12px; height: 12px; border-radius: 50%; }
+  .win-close { background: #ff5f57; }
+  .win-min { background: #febc2e; }
+  .win-max { background: #28c840; }
+  .titlebar-title { font-size: 13px; color: #555; margin-left: 6px; }
+  .titlebar-right { display: flex; gap: 14px; align-items: center; }
+  .titlebar-btn { font-size: 12px; color: #888; cursor: pointer; padding: 4px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+  .titlebar-btn.primary { background: #6c5ce7; color: #fff; border-color: #6c5ce7; }
+  .close-x { font-size: 18px; color: #aaa; cursor: pointer; line-height: 1; }
+
+  /* ===== LAYOUT ===== */
+  .body-row { display: flex; flex: 1; overflow: hidden; }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel { width: 240px; background: #fff; border-left: 1px solid #e8e5de; display: flex; flex-direction: column; flex-shrink: 0; }
+  .rp-header { padding: 14px 16px 10px; border-bottom: 1px solid #f0ede6; }
+  .rp-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+  .rp-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .rp-body { flex: 1; padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .ppt-preview-card { border: 1px solid #e8e5de; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+  .ppt-icon-box { width: 34px; height: 34px; border-radius: 8px; background: #ff6b35; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+  .ppt-card-name { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .ppt-thumb-sm { width: 68px; height: 44px; border-radius: 5px; overflow: hidden; flex-shrink: 0; }
+  .ppt-thumb-sm .slide-mini { width: 100%; height: 100%; }
+  .rp-ai-text { font-size: 12.5px; color: #555; line-height: 1.65; }
+  .rp-action-row { display: flex; gap: 7px; }
+  .rp-icon-btn { width: 27px; height: 27px; border: 1px solid #e0ddd6; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; background: #fff; }
+  .rp-icon-btn:hover { background: #f5f4f0; }
+  .rp-suggest { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid #e8e5de; border-radius: 8px; font-size: 12px; color: #555; cursor: pointer; background: #fff; }
+  .rp-suggest:hover { background: #f8f7f4; }
+  .rp-suggest .arr { color: #ccc; font-size: 15px; }
+  .rp-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 14px; border-top: 1px solid #f0ede6; }
+  .rp-chip { display: flex; align-items: center; gap: 4px; padding: 5px 9px; border: 1px solid #e0ddd6; border-radius: 20px; font-size: 11.5px; color: #666; cursor: pointer; background: #fff; }
+  .rp-chip:hover { background: #f5f4f0; }
+  .rp-input { margin: 0 14px 12px; display: flex; align-items: center; gap: 8px; border: 1px solid #ddd; border-radius: 8px; padding: 7px 10px; background: #fafaf8; }
+  .rp-input span { flex: 1; font-size: 12px; color: #bbb; }
+  .rp-send { width: 24px; height: 24px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .rp-bottom-bar { display: flex; align-items: center; gap: 10px; padding: 7px 14px 10px; }
+  .rp-bottom-bar span { font-size: 11.5px; color: #aaa; cursor: pointer; }
+
+  /* ===== PAGE 1: TEMPLATE CHOOSER ===== */
+  .p1-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .p1-top { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f0ede6; align-items: flex-start; }
+  .p1-preview-large { width: 340px; height: 200px; border-radius: 10px; overflow: hidden; flex-shrink: 0; position: relative; border: 2px solid #6c5ce7; }
+  .p1-preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; }
+  .p1-grid-thumb { border-radius: 6px; overflow: hidden; height: 88px; position: relative; }
+  .p1-gen-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(90deg, #a55de8, #7c4de8); color: #fff; border: none; border-radius: 24px; padding: 11px 28px; font-size: 14px; font-weight: 500; cursor: pointer; margin: 12px auto; width: fit-content; }
+  .p1-gen-btn .badge { background: rgba(255,255,255,.25); border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+  .p1-filter-row { display: flex; align-items: center; gap: 0; padding: 0 16px 10px; border-bottom: 1px solid #f0ede6; overflow-x: auto; }
+  .p1-filter-tab { padding: 6px 14px; font-size: 13px; color: #666; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
+  .p1-filter-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+  .p1-filter-tab:hover:not(.active) { color: #333; }
+  .p1-filter-right { margin-left: auto; display: flex; gap: 8px; }
+  .p1-filter-btn { padding: 5px 12px; border: 1px solid #e0ddd6; border-radius: 6px; font-size: 12px; color: #666; cursor: pointer; background: #fff; }
+  .p1-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 16px; overflow-y: auto; flex: 1; }
+  .p1-card { cursor: pointer; }
+  .p1-card-thumb { border-radius: 8px; overflow: hidden; height: 120px; position: relative; border: 2px solid transparent; transition: border-color .15s; }
+  .p1-card:first-child .p1-card-thumb { border-color: #6c5ce7; }
+  .p1-card-thumb:hover { border-color: #b0a8f0; }
+  .p1-card-label { font-size: 12px; color: #555; margin-top: 5px; text-align: center; }
+
+  /* ===== PAGE 2: EDITOR ===== */
+  .p2-toolbar { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid #e8e5de; background: #fafaf8; flex-wrap: wrap; flex-shrink: 0; }
+  .p2-tb-group { display: flex; align-items: center; gap: 1px; border-right: 1px solid #e0ddd6; padding-right: 8px; margin-right: 6px; }
+  .p2-tb-group:last-child { border-right: none; }
+  .p2-tb-btn { width: 26px; height: 26px; border-radius: 5px; border: none; background: transparent; cursor: pointer; color: #555; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .p2-tb-btn:hover { background: #eeecea; }
+  .p2-tb-select { height: 26px; border: 1px solid #ddd; border-radius: 5px; font-size: 12px; color: #555; padding: 0 6px; background: #fff; cursor: pointer; }
+  .p2-notice { display: flex; align-items: center; justify-content: space-between; padding: 7px 14px; background: #f0f4ff; border-bottom: 1px solid #d8dfff; font-size: 12px; color: #555; flex-shrink: 0; }
+  .p2-notice-btn { background: #6c5ce7; color: #fff; border: none; border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+  .p2-body { display: flex; flex: 1; overflow: hidden; }
+  .p2-slides { width: 160px; background: #f5f4f1; border-right: 1px solid #e4e1d8; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex-shrink: 0; }
+  .p2-slide-item { border-radius: 6px; overflow: hidden; cursor: pointer; position: relative; border: 2px solid transparent; }
+  .p2-slide-item.active { border-color: #6c5ce7; }
+  .p2-slide-num { position: absolute; left: -20px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #aaa; }
+  .p2-canvas { flex: 1; background: #e8e6e0; display: flex; align-items: center; justify-content: center; padding: 16px; position: relative; overflow: hidden; }
+  .p2-canvas-tools { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 2px; background: #fff; border-radius: 8px; border: 1px solid #e0ddd6; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .p2-ct-btn { width: 30px; height: 30px; border-radius: 5px; border: none; background: transparent; cursor: pointer; color: #555; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .p2-ct-btn:hover { background: #f0ede6; }
+  .p2-ct-label { font-size: 9px; color: #888; text-align: center; }
+  .p2-ct-group { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-bottom: 1px solid #f0ede6; }
+  .p2-ct-group:last-child { border-bottom: none; }
+  .p2-notes { position: absolute; bottom: 10px; left: 180px; right: 270px; font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 8px; }
+  .p2-slide-add { display: flex; align-items: center; justify-content: center; width: 100%; height: 28px; border: 1px dashed #ccc; border-radius: 6px; cursor: pointer; color: #aaa; font-size: 18px; margin-top: 4px; }
+  .p2-statusbar { display: flex; align-items: center; justify-content: space-between; padding: 5px 14px; border-top: 1px solid #e4e1d8; font-size: 11.5px; color: #888; background: #f7f6f3; flex-shrink: 0; }
+  .p2-zoom { display: flex; align-items: center; gap: 6px; }
+
+  /* ===== SVG SLIDES ===== */
+  .slide-red { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+
+  /* ===== PAGE 3: CHAT ===== */
+  .p3-sidebar { width: 200px; background: #f7f6f3; border-right: 1px solid #e4e1d8; display: flex; flex-direction: column; padding: 12px 0; flex-shrink: 0; }
+  .p3-logo { display: flex; align-items: center; gap: 8px; padding: 8px 14px 16px; font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .p3-logo-circle { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ff6b9d,#ff4e7a); display: flex; align-items: center; justify-content: center; }
+  .p3-new-task { margin: 0 12px 14px; border: 1px solid #ddd; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #666; text-align: center; cursor: pointer; background: #fff; }
+  .p3-nav { display: flex; align-items: center; gap: 7px; padding: 7px 14px; font-size: 13px; color: #666; cursor: pointer; border-radius: 6px; margin: 0 6px 1px; }
+  .p3-nav:hover { background: #eeecea; }
+  .p3-section { padding: 10px 14px 3px; font-size: 11px; color: #aaa; }
+  .p3-hist { padding: 7px 14px; font-size: 12.5px; color: #666; cursor: pointer; border-radius: 6px; margin: 0 6px 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .p3-hist.active { background: #ebe9fe; color: #6c5ce7; }
+  .p3-hist:not(.active):hover { background: #eeecea; }
+  .p3-more { color: #6c5ce7; font-size: 12px; }
+  .p3-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .p3-header { padding: 12px 16px; border-bottom: 1px solid #f0ede6; display: flex; align-items: center; justify-content: space-between; }
+  .p3-chat { flex: 1; padding: 14px 14px 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  .user-bubble { background: #6c5ce7; color: #fff; border-radius: 16px 16px 4px 16px; padding: 9px 14px; font-size: 13px; max-width: 75%; align-self: flex-end; line-height: 1.5; }
+  .p3-ppt-card { border: 1px solid #e8e5de; border-radius: 10px; padding: 12px 14px; background: #fff; }
+  .p3-ppt-inner { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .p3-ai-text { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 8px; }
+  .p3-actions { display: flex; gap: 7px; margin-bottom: 10px; }
+  .p3-icon-btn { width: 28px; height: 28px; border: 1px solid #e0ddd6; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #888; background: #fff; }
+  .p3-suggest { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid #e8e5de; border-radius: 8px; font-size: 12.5px; color: #555; cursor: pointer; margin-bottom: 6px; background: #fff; }
+  .p3-suggest:hover { background: #faf9f6; }
+  .p3-toolbar { padding: 10px 12px; border-top: 1px solid #f0ede6; display: flex; flex-direction: column; gap: 8px; }
+  .p3-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .p3-chip { display: flex; align-items: center; gap: 5px; padding: 6px 11px; border: 1px solid #e0ddd6; border-radius: 20px; font-size: 12px; color: #666; cursor: pointer; background: #fff; }
+  .p3-chip:hover { background: #f5f4f0; }
+  .p3-input-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 10px; background: #fafaf8; }
+  .p3-input-bar span.placeholder { flex: 1; font-size: 13px; color: #bbb; }
+  .p3-send { width: 28px; height: 28px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center; }
+  .p3-footer { display: flex; align-items: center; gap: 12px; padding: 0 3px; }
+  .p3-footer span { font-size: 12px; color: #aaa; cursor: pointer; }
+  .p3-user-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+  .p3-avatar { width: 24px; height: 24px; border-radius: 50%; background: #ccc; }
+</style>
+</head>
+<body>
+
+<div class="page-tabs">
+  <button class="page-tab active" onclick="showPage(0)">图1：模板选择</button>
+  <button class="page-tab" onclick="showPage(1)">图2：PPT 编辑</button>
+  <button class="page-tab" onclick="showPage(2)">图3：对话主页</button>
+</div>
+
+<!-- ===================== PAGE 1: TEMPLATE CHOOSER ===================== -->
+<div class="window active" id="page0">
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <div class="win-btn win-close"></div>
+      <div class="win-btn win-min"></div>
+      <div class="win-btn win-max"></div>
+      <span class="titlebar-title"></span>
+    </div>
+    <div class="close-x">×</div>
+  </div>
+  <div class="body-row">
+    <!-- LEFT: Template chooser -->
+    <div class="p1-main">
+      <div class="p1-top">
+        <div class="p1-preview-large">
+          <svg width="100%" height="100%" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient>
+            </defs>
+            <rect width="340" height="200" fill="url(#g1)"/>
+            <ellipse cx="270" cy="100" rx="90" ry="90" fill="#e8a020" opacity=".15"/>
+            <rect x="0" y="140" width="340" height="60" fill="#b5291e" opacity=".5"/>
+            <!-- Huabiao pillar simplified -->
+            <rect x="235" y="40" width="14" height="140" fill="#f5d78a" rx="3"/>
+            <rect x="225" y="40" width="34" height="8" fill="#f5d78a" rx="2"/>
+            <ellipse cx="242" cy="36" rx="18" ry="6" fill="#f5d78a"/>
+            <path d="M232 36 Q242 18 252 36" fill="#f0c840" opacity=".8"/>
+            <!-- Flying birds -->
+            <path d="M40 55 Q46 50 52 55" stroke="#fff" stroke-width="1.5" fill="none"/>
+            <path d="M60 40 Q68 34 76 40" stroke="#fff" stroke-width="1.5" fill="none"/>
+            <path d="M80 65 Q86 60 92 65" stroke="#fff" stroke-width="1.2" fill="none"/>
+            <!-- Text -->
+            <text x="24" y="88" font-size="10" fill="#ffe5b0" font-family="PingFang SC,Microsoft YaHei,sans-serif" opacity=".9">20XX YEAR</text>
+            <text x="24" y="114" font-size="19" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="600">党政工作汇报</text>
+            <text x="24" y="138" font-size="19" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="600">通用模板</text>
+            <rect x="24" y="152" width="70" height="22" rx="11" fill="rgba(255,255,255,.15)"/>
+            <text x="59" y="167" font-size="11" fill="#ffe" text-anchor="middle" font-family="PingFang SC,sans-serif">BY WPS</text>
+          </svg>
+        </div>
+        <div class="p1-preview-grid">
+          <!-- Contents slide -->
+          <div class="p1-grid-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg">
+              <rect width="160" height="88" fill="#fdf8f0"/>
+              <text x="80" y="14" font-size="9" fill="#888" text-anchor="middle" font-family="sans-serif">CONTENTS</text>
+              <text x="80" y="26" font-size="11" fill="#333" text-anchor="middle" font-family="PingFang SC,sans-serif" font-weight="600">目录</text>
+              <rect x="10" y="34" width="65" height="8" rx="2" fill="#eee"/>
+              <rect x="10" y="46" width="55" height="8" rx="2" fill="#eee"/>
+              <rect x="85" y="34" width="65" height="8" rx="2" fill="#eee"/>
+              <rect x="85" y="46" width="55" height="8" rx="2" fill="#eee"/>
+              <rect x="10" y="58" width="65" height="8" rx="2" fill="#eee"/>
+              <rect x="85" y="58" width="65" height="8" rx="2" fill="#eee"/>
+            </svg>
+          </div>
+          <!-- Section 01 -->
+          <div class="p1-grid-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="160" height="88" fill="url(#g2)"/>
+              <ellipse cx="130" cy="44" rx="50" ry="50" fill="#e8a020" opacity=".1"/>
+              <text x="80" y="30" font-size="22" fill="rgba(255,255,255,.3)" text-anchor="middle" font-family="sans-serif" font-weight="700">01</text>
+              <rect x="20" y="46" width="80" height="12" rx="3" fill="rgba(255,255,255,.25)"/>
+              <text x="60" y="56" font-size="8" fill="#fff" text-anchor="middle" font-family="sans-serif">单击此处添加章节标题</text>
+            </svg>
+          </div>
+          <!-- Content slide -->
+          <div class="p1-grid-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg">
+              <rect width="160" height="88" fill="#fdf8f0"/>
+              <rect x="10" y="12" width="90" height="10" rx="3" fill="#e8d5b0"/>
+              <text x="55" y="21" font-size="8" fill="#c0392b" text-anchor="middle" font-family="sans-serif">单击此处添加标题</text>
+              <rect x="10" y="28" width="140" height="6" rx="2" fill="#eee"/>
+              <rect x="10" y="38" width="120" height="6" rx="2" fill="#eee"/>
+              <rect x="10" y="48" width="130" height="6" rx="2" fill="#eee"/>
+              <rect x="10" y="58" width="100" height="6" rx="2" fill="#eee"/>
+            </svg>
+          </div>
+          <!-- End slide -->
+          <div class="p1-grid-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="160" height="88" fill="url(#g3)"/>
+              <text x="80" y="30" font-size="8" fill="rgba(255,255,255,.6)" text-anchor="middle" font-family="sans-serif">THE END</text>
+              <text x="80" y="52" font-size="16" fill="#fff" text-anchor="middle" font-family="PingFang SC,sans-serif" font-weight="600">谢谢观看</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <button class="p1-gen-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z"/></svg>
+        开始生成PPT
+        <span class="badge">限免</span>
+      </button>
+
+      <div class="p1-filter-row">
+        <div class="p1-filter-tab active">全部</div>
+        <div class="p1-filter-tab">总结汇报</div>
+        <div class="p1-filter-tab">教育培训</div>
+        <div class="p1-filter-tab">营销推广</div>
+        <div class="p1-filter-tab">高校专区</div>
+        <div class="p1-filter-tab">企业宣讲</div>
+        <div class="p1-filter-tab">更多 ∨</div>
+        <div class="p1-filter-right">
+          <div class="p1-filter-btn">风格 ∨</div>
+          <div class="p1-filter-btn">颜色 ∨</div>
+        </div>
+      </div>
+
+      <div class="p1-grid">
+        <!-- Card 1: 党政 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gc1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="200" height="120" fill="url(#gc1)"/>
+              <ellipse cx="160" cy="60" rx="60" ry="60" fill="#e8a020" opacity=".12"/>
+              <path d="M0 85 Q100 70 200 85 L200 120 L0 120 Z" fill="#b5291e" opacity=".5"/>
+              <rect x="145" y="18" width="10" height="88" fill="#f5d78a" rx="2"/>
+              <rect x="138" y="18" width="24" height="6" fill="#f5d78a" rx="1"/>
+              <path d="M40 30 Q44 26 48 30" stroke="#fff" stroke-width="1.2" fill="none"/>
+              <path d="M55 20 Q60 16 65 20" stroke="#fff" stroke-width="1.2" fill="none"/>
+              <text x="16" y="52" font-size="6" fill="#ffe5b0" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="68" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">党政工作汇报</text>
+              <text x="16" y="82" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">通用模板</text>
+              <rect x="16" y="92" width="48" height="14" rx="7" fill="rgba(255,255,255,.15)"/>
+              <text x="40" y="103" font-size="7" fill="#ffe" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+            </svg>
+          </div>
+          <div class="p1-card-label">党政风党政通用模板</div>
+        </div>
+        <!-- Card 2: 蓝金色 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="120" fill="#1a2a3a"/>
+              <rect width="200" height="120" fill="url(#noise)" opacity=".05"/>
+              <ellipse cx="100" cy="60" rx="80" ry="80" fill="#234" opacity=".8"/>
+              <text x="16" y="36" font-size="6" fill="#c8a050" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="58" font-size="14" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">蓝金色教育中国风</text>
+              <text x="16" y="76" font-size="14" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">主题</text>
+              <rect x="16" y="90" width="48" height="14" rx="7" fill="rgba(200,160,80,.2)"/>
+              <text x="40" y="101" font-size="7" fill="#c8a050" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+            </svg>
+          </div>
+          <div class="p1-card-label">蓝金色中国风主题</div>
+        </div>
+        <!-- Card 3: 绿色班会 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="120" fill="#2ecc71"/>
+              <rect x="0" y="0" width="8" height="120" fill="#27ae60"/>
+              <ellipse cx="160" cy="40" rx="50" ry="50" fill="#fff" opacity=".1"/>
+              <text x="16" y="32" font-size="6" fill="rgba(255,255,255,.7)" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="56" font-size="13" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">可爱童趣</text>
+              <text x="16" y="72" font-size="13" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">主题班会模版</text>
+              <rect x="16" y="88" width="54" height="14" rx="7" fill="rgba(255,255,255,.25)"/>
+              <text x="43" y="99" font-size="7" fill="#fff" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+              <!-- Stick figures -->
+              <circle cx="155" cy="55" r="8" fill="#fff" opacity=".8"/>
+              <line x1="155" y1="63" x2="155" y2="82" stroke="#fff" stroke-width="2" opacity=".8"/>
+              <line x1="145" y1="68" x2="165" y2="68" stroke="#fff" stroke-width="2" opacity=".8"/>
+              <line x1="155" y1="82" x2="148" y2="95" stroke="#fff" stroke-width="2" opacity=".8"/>
+              <line x1="155" y1="82" x2="162" y2="95" stroke="#fff" stroke-width="2" opacity=".8"/>
+            </svg>
+          </div>
+          <div class="p1-card-label">绿色班会卡通主题</div>
+        </div>
+        <!-- Card 4: 文艺 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="120" fill="#e8f5e9"/>
+              <path d="M0 0 Q50 20 0 40z" fill="#c8e6c9"/>
+              <path d="M200 80 Q160 100 200 120z" fill="#c8e6c9"/>
+              <text x="16" y="36" font-size="6" fill="#777" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="56" font-size="12" fill="#2e7d32" font-family="PingFang SC,sans-serif" font-weight="600">文艺清新论文答辩</text>
+              <text x="16" y="72" font-size="12" fill="#2e7d32" font-family="PingFang SC,sans-serif" font-weight="600">模板</text>
+              <rect x="16" y="86" width="48" height="14" rx="7" fill="rgba(46,125,50,.15)"/>
+              <text x="40" y="97" font-size="7" fill="#2e7d32" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+            </svg>
+          </div>
+          <div class="p1-card-label">文艺清新论文答辩模板</div>
+        </div>
+        <!-- Card 5: 教育 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="120" fill="#1976d2"/>
+              <ellipse cx="180" cy="20" rx="60" ry="60" fill="#1565c0" opacity=".6"/>
+              <text x="16" y="36" font-size="6" fill="rgba(255,255,255,.7)" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="58" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">教育教学通用PPT</text>
+              <text x="16" y="74" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">模板</text>
+              <rect x="16" y="88" width="48" height="14" rx="7" fill="rgba(255,255,255,.2)"/>
+              <text x="40" y="99" font-size="7" fill="#fff" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+            </svg>
+          </div>
+          <div class="p1-card-label">教育教学通用PPT模板</div>
+        </div>
+        <!-- Card 6: 职场 -->
+        <div class="p1-card">
+          <div class="p1-card-thumb">
+            <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <rect width="200" height="120" fill="#37474f"/>
+              <rect x="0" y="80" width="200" height="40" fill="#263238"/>
+              <text x="16" y="36" font-size="6" fill="rgba(255,255,255,.5)" font-family="sans-serif">20XX YEAR</text>
+              <text x="16" y="58" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">职场日常</text>
+              <text x="16" y="74" font-size="12" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">办公通用模版</text>
+              <rect x="16" y="88" width="48" height="14" rx="7" fill="rgba(255,255,255,.15)"/>
+              <text x="40" y="99" font-size="7" fill="#fff" text-anchor="middle" font-family="sans-serif">BY WPS</text>
+            </svg>
+          </div>
+          <div class="p1-card-label">职场日常办公通用模版</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="rp-header">
+        <div class="rp-title">青花瓷的国际传播之路</div>
+        <div class="rp-sub">内容由 AI 生成</div>
+      </div>
+      <div class="rp-body">
+        <div class="ppt-preview-card">
+          <div class="ppt-icon-box">P</div>
+          <div style="flex:1;">
+            <div class="ppt-card-name">黄山：天下第一奇山</div>
+          </div>
+          <div class="ppt-thumb-sm">
+            <svg width="68" height="44" viewBox="0 0 68 44" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gt" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="68" height="44" fill="url(#gt)"/>
+              <text x="34" y="16" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">黄山：天下第</text>
+              <text x="34" y="26" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">一奇山</text>
+              <rect x="10" y="32" width="30" height="6" rx="3" fill="rgba(255,255,255,.2)"/>
+              <text x="25" y="38" font-size="4.5" fill="#fff" text-anchor="middle" font-family="sans-serif">汇报人：WPS</text>
+            </svg>
+          </div>
+        </div>
+        <div class="rp-ai-text">已为你生成一份关于 <strong>黄山：天下第一奇山</strong> 的PPT大纲，你可以告诉我需要修改的内容，或直接挑选模板开始创建PPT。</div>
+        <div class="rp-action-row">
+          <div class="rp-icon-btn">↺</div>
+          <div class="rp-icon-btn">↻</div>
+          <div class="rp-icon-btn">👍</div>
+          <div class="rp-icon-btn">👎</div>
+        </div>
+        <div class="rp-suggest">补充黄山四季景观特色 <span class="arr">›</span></div>
+        <div class="rp-suggest">增加游客体验建议部分 <span class="arr">›</span></div>
+        <div class="rp-suggest">细化文化底蕴具体案例 <span class="arr">›</span></div>
+      </div>
+      <div class="rp-chips">
+        <div class="rp-chip">📊 AI PPT</div>
+        <div class="rp-chip">✦ 长文写作</div>
+        <div class="rp-chip">✏ 快速创作</div>
+        <div class="rp-chip">⋮ 更多</div>
+      </div>
+      <div class="rp-input">
+        <span>询问任何问题或者选择技能</span>
+        <div class="rp-send">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="#999"><path d="M1 9L9 5 1 1v3l4 1-4 1z"/></svg>
+        </div>
+      </div>
+      <div class="rp-bottom-bar">
+        <span>＋</span>
+        <span>⊞ 技能</span>
+        <span>⊙ 深度思考</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE 2: EDITOR ===================== -->
+<div class="window" id="page1">
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <div class="win-btn win-close"></div>
+      <div class="win-btn win-min"></div>
+      <div class="win-btn win-max"></div>
+      <span class="titlebar-title" style="margin-left:10px;font-size:13px;color:#333;">黄山天下第一奇山.pptx</span>
+    </div>
+    <div class="titlebar-right">
+      <div class="titlebar-btn">▽ 去 WPS 编辑</div>
+      <div class="titlebar-btn primary">↓ 下载</div>
+      <div class="close-x">×</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="p2-toolbar">
+    <div class="p2-tb-group">
+      <button class="p2-tb-btn">◁</button>
+      <button class="p2-tb-btn">▷</button>
+    </div>
+    <div class="p2-tb-group">
+      <button class="p2-tb-btn" style="font-size:16px;">⊡</button>
+      <button class="p2-tb-btn">∨</button>
+      <button class="p2-tb-btn" style="font-size:16px;">⊞</button>
+      <button class="p2-tb-btn">∨</button>
+      <button class="p2-tb-btn" style="font-size:16px;">⊟</button>
+      <button class="p2-tb-btn">∨</button>
+    </div>
+    <div class="p2-tb-group">
+      <select class="p2-tb-select" style="width:70px;">
+        <option>字体</option>
+      </select>
+      <select class="p2-tb-select" style="width:55px;">
+        <option>字号</option>
+      </select>
+    </div>
+    <div class="p2-tb-group">
+      <button class="p2-tb-btn" style="font-weight:700;">B</button>
+      <button class="p2-tb-btn" style="font-style:italic;">I</button>
+      <button class="p2-tb-btn">∨</button>
+    </div>
+    <div class="p2-tb-group">
+      <button class="p2-tb-btn">A</button>
+      <button class="p2-tb-btn">∨</button>
+      <button class="p2-tb-btn">▣</button>
+      <button class="p2-tb-btn">∨</button>
+    </div>
+    <button class="p2-tb-btn">▷</button>
+  </div>
+
+  <!-- Notice bar -->
+  <div class="p2-notice">
+    <span>ℹ 你的超级会员已过期，365G云空间、PDF编辑转换等200+...</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="p2-notice-btn">立即续费</button>
+      <span style="cursor:pointer;color:#aaa;">×</span>
+    </div>
+  </div>
+
+  <div class="body-row" style="flex:1;min-height:0;">
+    <!-- Editor body -->
+    <div class="p2-body" style="flex:1;min-width:0;">
+      <!-- Slide panel -->
+      <div class="p2-slides">
+        <!-- Slide 1 -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#aaa;width:14px;text-align:right;">1</span>
+          <div class="p2-slide-item active" style="flex:1;">
+            <svg width="100%" viewBox="0 0 130 82" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gs1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="130" height="82" fill="url(#gs1)"/>
+              <ellipse cx="100" cy="41" rx="45" ry="45" fill="#e8a020" opacity=".1"/>
+              <path d="M0 60 Q65 50 130 60 L130 82 L0 82 Z" fill="#b5291e" opacity=".4"/>
+              <rect x="88" y="12" width="7" height="60" fill="#f5d78a" rx="1.5"/>
+              <rect x="83" y="12" width="17" height="5" fill="#f5d78a" rx="1"/>
+              <text x="12" y="38" font-size="10" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">黄山：天下第一奇</text>
+              <text x="12" y="52" font-size="10" fill="#fff" font-family="PingFang SC,sans-serif" font-weight="700">山</text>
+              <rect x="12" y="60" width="38" height="11" rx="5.5" fill="rgba(255,255,255,.15)"/>
+              <text x="31" y="69" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif">汇报人：WPS</text>
+            </svg>
+          </div>
+        </div>
+        <!-- Slide 2 -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#aaa;width:14px;text-align:right;">2</span>
+          <div class="p2-slide-item" style="flex:1;">
+            <svg width="100%" viewBox="0 0 130 82" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gs2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="130" height="82" fill="url(#gs2)"/>
+              <text x="65" y="28" font-size="22" fill="rgba(255,255,255,.25)" text-anchor="middle" font-family="sans-serif" font-weight="700">01</text>
+              <text x="65" y="50" font-size="8" fill="#fff" text-anchor="middle" font-family="PingFang SC,sans-serif">黄山：天下第一奇山</text>
+            </svg>
+          </div>
+        </div>
+        <!-- Slide 3 -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#aaa;width:14px;text-align:right;">3</span>
+          <div class="p2-slide-item" style="flex:1;">
+            <svg width="100%" viewBox="0 0 130 82" xmlns="http://www.w3.org/2000/svg">
+              <rect width="130" height="82" fill="#fdf8f0"/>
+              <text x="8" y="16" font-size="7" fill="#c0392b" font-family="PingFang SC,sans-serif" font-weight="600">黄山核心景观概览</text>
+              <rect x="8" y="20" width="40" height="28" rx="3" fill="#ddd"/>
+              <rect x="52" y="20" width="70" height="7" rx="2" fill="#eee"/>
+              <rect x="52" y="30" width="60" height="6" rx="2" fill="#eee"/>
+              <rect x="52" y="39" width="65" height="6" rx="2" fill="#eee"/>
+              <rect x="8" y="52" width="114" height="6" rx="2" fill="#eee"/>
+              <rect x="8" y="62" width="90" height="6" rx="2" fill="#eee"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Slide 4 -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#aaa;width:14px;text-align:right;">4</span>
+          <div class="p2-slide-item" style="flex:1;">
+            <svg width="100%" viewBox="0 0 130 82" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gs4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="130" height="82" fill="url(#gs4)"/>
+              <text x="65" y="28" font-size="7" fill="rgba(255,255,255,.7)" text-anchor="middle" font-family="sans-serif">THE END</text>
+              <text x="65" y="48" font-size="14" fill="#fff" text-anchor="middle" font-family="PingFang SC,sans-serif" font-weight="600">谢谢</text>
+            </svg>
+          </div>
+        </div>
+        <div class="p2-slide-add">＋</div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="p2-canvas">
+        <!-- Main slide SVG -->
+        <svg width="560" height="380" viewBox="0 0 560 380" xmlns="http://www.w3.org/2000/svg" style="border-radius:4px;box-shadow:0 4px 20px rgba(0,0,0,.25);">
+          <defs>
+            <linearGradient id="mainG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#c0392b"/>
+              <stop offset="60%" stop-color="#e74c3c"/>
+              <stop offset="100%" stop-color="#c0392b"/>
+            </linearGradient>
+          </defs>
+          <rect width="560" height="380" fill="url(#mainG)"/>
+          <!-- Decorative glow -->
+          <ellipse cx="420" cy="190" rx="200" ry="200" fill="#e8a020" opacity=".08"/>
+          <ellipse cx="420" cy="190" rx="130" ry="130" fill="#ffd700" opacity=".05"/>
+          <!-- Bottom wave -->
+          <path d="M0 280 Q140 255 280 270 Q420 285 560 270 L560 380 L0 380 Z" fill="#b5291e" opacity=".45"/>
+          <path d="M0 300 Q140 280 280 295 Q420 310 560 295 L560 380 L0 380 Z" fill="#9b2212" opacity=".3"/>
+          <!-- Huabiao pillar -->
+          <rect x="388" y="60" width="22" height="290" fill="#f5d78a" rx="4"/>
+          <rect x="374" y="60" width="50" height="14" fill="#f5d78a" rx="3"/>
+          <ellipse cx="399" cy="56" rx="30" ry="10" fill="#f0c840"/>
+          <path d="M374 56 Q399 24 424 56" fill="#f0c840" opacity=".7"/>
+          <ellipse cx="399" cy="52" rx="12" ry="4" fill="#ffd700"/>
+          <!-- Birds -->
+          <path d="M60 85 Q70 76 80 85" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M90 60 Q104 50 118 60" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M130 94 Q140 86 150 94" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M40 110 Q48 103 56 110" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <!-- Date -->
+          <text x="38" y="145" font-size="14" fill="rgba(255,255,255,.8)" font-family="sans-serif">2026/04/24</text>
+          <!-- Main title -->
+          <text x="38" y="200" font-size="46" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="700">黄山：天下第一奇</text>
+          <text x="38" y="256" font-size="46" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="700">山</text>
+          <!-- Author badge -->
+          <rect x="38" y="278" width="108" height="32" rx="16" fill="rgba(255,255,255,.18)"/>
+          <text x="92" y="299" font-size="14" fill="#fff" text-anchor="middle" font-family="PingFang SC,sans-serif">汇报人：WPS</text>
+          <!-- Indicator dots -->
+          <circle cx="510" cy="210" r="5" fill="#fff" opacity=".9"/>
+          <circle cx="510" cy="228" r="4" fill="#fff" opacity=".4"/>
+          <circle cx="510" cy="244" r="4" fill="#fff" opacity=".4"/>
+          <!-- Anthropic AI badge overlay -->
+          <rect x="14" y="14" width="30" height="30" rx="6" fill="rgba(255,255,255,.12)"/>
+          <text x="29" y="34" font-size="14" fill="#fff" text-anchor="middle" font-family="sans-serif">A</text>
+        </svg>
+
+        <!-- Side tools -->
+        <div class="p2-canvas-tools">
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">⚙</button>
+            <div class="p2-ct-label">格式</div>
+          </div>
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">⊞</button>
+            <div class="p2-ct-label">模板</div>
+          </div>
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">◑</button>
+            <div class="p2-ct-label">颜色</div>
+          </div>
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">A</button>
+            <div class="p2-ct-label">字体</div>
+          </div>
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">✦</button>
+            <div class="p2-ct-label">动画</div>
+          </div>
+          <div class="p2-ct-group">
+            <button class="p2-ct-btn">▣</button>
+            <div class="p2-ct-label">评论</div>
+          </div>
+        </div>
+
+        <!-- Notes bar -->
+        <div class="p2-notes">
+          <span>单击此处添加演讲备注或使用</span>
+          <span style="color:#6c5ce7;border:1px solid #d0c8f8;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">☆ AI演讲稿</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right-panel">
+      <div class="rp-header">
+        <div class="rp-title">青花瓷的国际传播之路</div>
+        <div class="rp-sub">内容由 AI 生成</div>
+      </div>
+      <div class="rp-body">
+        <div class="ppt-preview-card">
+          <div class="ppt-icon-box">P</div>
+          <div style="flex:1;">
+            <div class="ppt-card-name">黄山天下第一奇山</div>
+          </div>
+          <div class="ppt-thumb-sm">
+            <svg width="68" height="44" viewBox="0 0 68 44" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="gt2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+              <rect width="68" height="44" fill="url(#gt2)"/>
+              <text x="34" y="16" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">黄山：天下第</text>
+              <text x="34" y="26" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">一奇山</text>
+            </svg>
+          </div>
+        </div>
+        <div class="rp-ai-text">已为你生成一份关于 <strong>黄山天下第一奇山</strong> 的PPT。</div>
+        <div class="rp-action-row">
+          <div class="rp-icon-btn">↺</div>
+          <div class="rp-icon-btn">↻</div>
+          <div class="rp-icon-btn">👍</div>
+          <div class="rp-icon-btn">👎</div>
+        </div>
+        <div class="rp-suggest">补充黄山四季景观特色 <span class="arr">›</span></div>
+        <div class="rp-suggest">增加游客体验建议部分 <span class="arr">›</span></div>
+        <div class="rp-suggest">细化文化底蕴具体案例 <span class="arr">›</span></div>
+      </div>
+      <div class="rp-chips">
+        <div class="rp-chip">📊 AI PPT</div>
+        <div class="rp-chip">✦ 长文写作</div>
+        <div class="rp-chip">✏ 快速创作</div>
+        <div class="rp-chip">⋮ 更多</div>
+      </div>
+      <div class="rp-input">
+        <span>询问任何问题或者选择技能</span>
+        <div class="rp-send">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="#999"><path d="M1 9L9 5 1 1v3l4 1-4 1z"/></svg>
+        </div>
+      </div>
+      <div class="rp-bottom-bar">
+        <span>＋</span><span>⊞ 技能</span><span>⊙ 深度思考</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="p2-statusbar">
+    <span>幻灯片 1/4</span>
+    <div class="p2-zoom">
+      <button style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#888;">⊞</button>
+      <button style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#888;">⊟</button>
+      <button style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#888;">⊡</button>
+      <button style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#888;">⊠</button>
+      <span>—</span>
+      <span>36%</span>
+      <span>+</span>
+      <button style="border:none;background:transparent;cursor:pointer;font-size:13px;color:#888;">⊞</button>
+      <div style="width:18px;height:18px;border-radius:50%;background:#e74c3c;display:inline-block;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE 3: CHAT ===================== -->
+<div class="window" id="page2">
+  <div class="body-row" style="height:620px;">
+    <div class="p3-sidebar">
+      <div class="p3-logo">
+        <div class="p3-logo-circle">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4" fill="white" opacity=".9"/></svg>
+        </div>
+        WPS 灵犀
+      </div>
+      <div class="p3-new-task">＋ 新任务</div>
+      <div class="p3-nav">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="2" width="12" height="9" rx="2" opacity=".2"/><rect x="3" y="4" width="8" height="1.5" rx=".75"/><rect x="3" y="7" width="5" height="1.5" rx=".75"/></svg>
+        AI PPT
+      </div>
+      <div class="p3-nav">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5" opacity=".2"/><circle cx="7" cy="7" r="2.5"/></svg>
+        深度研究
+      </div>
+      <div class="p3-nav">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M2 2h10a1 1 0 011 1v8l-3-2H2a1 1 0 01-1-1V3a1 1 0 011-1z" opacity=".25"/></svg>
+        收藏夹
+      </div>
+      <div class="p3-nav">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg>
+        更多
+      </div>
+      <div class="p3-section">最近</div>
+      <div class="p3-hist active">青花瓷的国际传播之路</div>
+      <div class="p3-hist">高端汽车新品发布会策划PP...</div>
+      <div class="p3-hist">初次问候交流</div>
+      <div class="p3-hist p3-more">查看全部</div>
+      <div style="flex:1;"></div>
+      <div class="p3-user-row">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="p3-avatar"></div>
+          <span style="font-size:12.5px;color:#666;">思想</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" opacity=".4"><path d="M2 4h10M2 7h10M2 10h7" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" opacity=".4"><circle cx="7" cy="7" r="5" opacity=".3"/><circle cx="7" cy="7" r="2"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="p3-main">
+      <div class="p3-header">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;">青花瓷的国际传播之路</div>
+          <div style="font-size:11.5px;color:#aaa;">内容由 AI 生成</div>
+        </div>
+        <div style="display:flex;gap:10px;opacity:.4;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4h8v8H4z" opacity=".3"/><path d="M6 2h4v2H6z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 10l5 4 5-4M8 2v12"/></svg>
+        </div>
+      </div>
+
+      <div class="p3-chat">
+        <div class="user-bubble">根据以下主题生成PPT：生成一张黄山的宣传ppt，就一张</div>
+        <div class="p3-ppt-card">
+          <div class="p3-ppt-inner">
+            <div class="ppt-icon-box">P</div>
+            <div style="flex:1;">
+              <div class="ppt-card-name">黄山天下第一奇山</div>
+            </div>
+            <div class="ppt-thumb-sm">
+              <svg width="68" height="44" viewBox="0 0 68 44" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gt3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+                <rect width="68" height="44" fill="url(#gt3)"/>
+                <text x="34" y="16" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">黄山：天下第</text>
+                <text x="34" y="26" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">一奇山</text>
+              </svg>
+            </div>
+          </div>
+          <div class="p3-ai-text">已为你生成一份关于 <strong>黄山天下第一奇山</strong> 的PPT。</div>
+          <div class="p3-actions">
+            <div class="p3-icon-btn" title="分享">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="9" cy="2" r="1.5"/><circle cx="2" cy="6" r="1.5"/><circle cx="9" cy="10" r="1.5"/><path d="M3.5 5.3l4-2.4M3.5 6.7l4 2.4" stroke="currentColor" stroke-width=".9" fill="none"/></svg>
+            </div>
+            <div class="p3-icon-btn">↺</div>
+            <div class="p3-icon-btn">👍</div>
+            <div class="p3-icon-btn">👎</div>
+          </div>
+          <div class="p3-suggest">补充黄山四季景观特色 <span style="color:#ccc;font-size:15px;">›</span></div>
+          <div class="p3-suggest">增加游客体验建议部分 <span style="color:#ccc;font-size:15px;">›</span></div>
+          <div class="p3-suggest" style="margin-bottom:0;">细化文化底蕴具体案例 <span style="color:#ccc;font-size:15px;">›</span></div>
+        </div>
+      </div>
+
+      <div class="p3-toolbar">
+        <div class="p3-chips">
+          <div class="p3-chip">📊 AI PPT</div>
+          <div class="p3-chip">✦ 长文写作</div>
+          <div class="p3-chip">✏ 快速创作</div>
+          <div class="p3-chip">🖼 AI 生图</div>
+          <div class="p3-chip">📄 AI 文书</div>
+          <div class="p3-chip">🔍 AI 搜索</div>
+          <div class="p3-chip">⋮ 更多</div>
+        </div>
+        <div class="p3-input-bar">
+          <div class="p3-footer">
+            <span>＋</span>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor" opacity=".4"><rect x="1" y="2" width="11" height="9" rx="1.5" opacity=".3"/><path d="M4 5.5h5M4 7.5h3" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+            <span>技能</span>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor" opacity=".4"><circle cx="6.5" cy="6.5" r="5" opacity=".2"/><circle cx="6.5" cy="6.5" r="2.5" opacity=".7"/></svg>
+            <span>深度思考</span>
+          </div>
+          <span class="placeholder">询问任何问题或者选择技能</span>
+          <div class="p3-send">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="#999"><path d="M1 9L9 5 1 1v3l4 1-4 1z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(idx) {
+  document.querySelectorAll('.window').forEach((w,i) => {
+    w.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.page-tab').forEach((t,i) => {
+    t.classList.toggle('active', i === idx);
+  });
+}
+</script>
+</body>
+</html>

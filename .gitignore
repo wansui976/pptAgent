@@ -1,0 +1,36 @@
+# OS/editor noise
+.DS_Store
+._*
+.claude/
+.vscode/
+.idea/
+
+# Logs and runtime output
+*.log
+logs/
+server*.log
+
+# Node
+node_modules/
+.npm-cache/
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local config and generated data
+.env
+.env.*
+*.db
+*.sqlite
+*.sqlite3
+.nested-git-backup/
+background/config.json
+
+# Generated workspace artifacts
+workspace/

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WPS 灵犀 - AI PPT</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body data-active-view="chat">
+    <!-- ============================ VIEW 1: 对话主页 ============================ -->
+    <section class="window view view-chat active" data-view="chat">
+      <div class="body-row">
+        <!-- 左侧：会话栏 -->
+        <aside class="chat-sidebar" id="chatSidebar">
+          <div class="chat-logo-row">
+            <div class="chat-logo">
+              <div class="chat-logo-circle">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4" fill="white" opacity=".9"/></svg>
+              </div>
+              WPS 灵犀
+            </div>
+            <button id="sidebarToggleBtn" class="sidebar-toggle-btn" type="button" aria-label="收回侧边栏" aria-expanded="true" title="收回侧边栏">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <button id="newSessionBtn" class="chat-new-task" type="button">＋ 新任务</button>
+
+          <div class="chat-nav">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="2" width="12" height="9" rx="2" opacity=".2"/><rect x="3" y="4" width="8" height="1.5" rx=".75"/><rect x="3" y="7" width="5" height="1.5" rx=".75"/></svg>
+            AI PPT
+          </div>
+          <div class="chat-nav">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5" opacity=".2"/><circle cx="7" cy="7" r="2.5"/></svg>
+            深度研究
+          </div>
+          <div class="chat-nav">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M2 2h10a1 1 0 011 1v8l-3-2H2a1 1 0 01-1-1V3a1 1 0 011-1z" opacity=".25"/></svg>
+            收藏夹
+          </div>
+          <div class="chat-nav">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="11" cy="7" r="1.2"/></svg>
+            更多
+          </div>
+
+          <div class="chat-section-title">最近</div>
+          <label class="session-search-wrap" for="sessionSearchInput">
+            <input id="sessionSearchInput" class="session-search-input" type="search" placeholder="搜索会话" />
+          </label>
+          <div id="sessionList" class="chat-session-list"></div>
+
+          <div class="chat-user-row">
+            <div class="chat-user-info">
+              <div class="chat-avatar"></div>
+              <span id="chatUserName" class="chat-user-name">未登录</span>
+            </div>
+            <button id="logoutBtn" class="chat-logout-btn" type="button">退出</button>
+          </div>
+        </aside>
+
+        <!-- 右侧：主聊天区 -->
+        <main class="chat-main">
+          <div class="chat-header">
+            <button id="sidebarExpandBtn" class="sidebar-expand-btn" type="button" aria-label="展开侧边栏" title="展开侧边栏">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div>
+              <div id="chatHeaderTitle" class="chat-header-title">新对话</div>
+            </div>
+          </div>
+
+          <div id="chatScrollArea" class="chat-scroll">
+            <!-- 欢迎区 -->
+            <section id="heroSection" class="hero-section">
+              <div class="hero-content">
+                <h1 class="hero-title">嗨，我是<span>灵犀</span></h1>
+                <p class="hero-subtitle">现在由 Go Agent 服务驱动对话。直接提需求即可，PPT 生成过程会实时展示。</p>
+              </div>
+              <div id="suggestionGrid" class="suggestion-grid">
+                <button class="suggestion-card" type="button" data-prompt="帮我整理今天的学习计划，按早中晚拆开。">
+                  <div class="suggestion-text">帮我整理今天的学习计划，按早中晚拆开</div>
+                  <span class="suggestion-icon icon-blue">✦</span>
+                </button>
+                <button class="suggestion-card" type="button" data-prompt="解释一下 Go 闭包和值传递的区别，并举例。">
+                  <div class="suggestion-text">解释一下 Go 闭包和值传递的区别，并举例</div>
+                  <span class="suggestion-icon icon-green">⌘</span>
+                </button>
+                <button class="suggestion-card" type="button" data-prompt="把这段前端代码的问题找出来，并给我改好。">
+                  <div class="suggestion-text">把这段前端代码的问题找出来，并给我改好</div>
+                  <span class="suggestion-icon icon-gold">⚡</span>
+                </button>
+                <button class="suggestion-card" type="button" data-prompt="帮我做一份关于人工智能发展趋势的 16:9 PPT。">
+                  <div class="suggestion-text">帮我做一份关于人工智能发展趋势的 16:9 PPT</div>
+                  <span class="suggestion-icon icon-purple">✎</span>
+                </button>
+              </div>
+            </section>
+
+            <section id="chatContainer" class="chat-container"></section>
+            <div id="pipelineBar" class="pipeline-bar hidden"></div>
+            <div id="pipelineCards" class="pipeline-cards"></div>
+          </div>
+
+          <div id="uploadPreview" class="upload-preview hidden"></div>
+
+          <div class="chat-toolbar">
+            <div class="chat-chips">
+              <div class="chat-chip">📊 AI PPT</div>
+              <div class="chat-chip">✦ 长文写作</div>
+              <div class="chat-chip">✏ 快速创作</div>
+              <div class="chat-chip">🖼 AI 生图</div>
+              <div class="chat-chip">📄 AI 文书</div>
+              <div class="chat-chip">🔍 AI 搜索</div>
+              <div class="chat-chip">⋮ 更多</div>
+            </div>
+            <div class="chat-input-bar">
+              <label class="chat-attach-btn" for="imageInput" title="上传文件">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                </svg>
+                <input id="imageInput" type="file" multiple hidden />
+              </label>
+              <textarea id="messageInput" rows="1" placeholder="询问任何问题或者选择技能"></textarea>
+              <button id="stopBtn" class="chat-send stop hidden" type="button" aria-label="停止生成">■</button>
+              <button id="sendBtn" class="chat-send" type="button" aria-label="发送">
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor"><path d="M1 9L9 5 1 1v3l4 1-4 1z"/></svg>
+              </button>
+            </div>
+            <div class="chat-bottom-bar">
+              <span>＋</span>
+              <span>⊞ 技能</span>
+              <span>⊙ 深度思考</span>
+              <button id="clearChatBtn" class="chat-bottom-clear" type="button" title="清空当前会话">🗑 清空</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- ============================ VIEW 2: 模板选择 ============================ -->
+    <section class="window view view-templates" data-view="templates">
+      <div class="titlebar">
+        <div class="titlebar-left">
+          <div class="win-btn win-close"></div>
+          <div class="win-btn win-min"></div>
+          <div class="win-btn win-max"></div>
+        </div>
+        <button class="close-x view-close" type="button" data-back="chat">×</button>
+      </div>
+      <div class="body-row">
+        <div class="tpl-main">
+          <div id="tplRecommendationBanner" class="tpl-recommend-banner hidden">
+            <div class="tpl-recommend-copy">
+              <div class="tpl-recommend-kicker">AI 推荐模板</div>
+              <div id="tplRecommendationTitle" class="tpl-recommend-title">等待推荐结果</div>
+              <div id="tplRecommendationReason" class="tpl-recommend-reason">AI 会先根据你的需求推荐一个模板，你也可以改选下方其他模板。</div>
+            </div>
+            <button id="tplBackToChatBtn" class="tpl-recommend-btn" type="button">返回对话</button>
+          </div>
+          <div class="tpl-top">
+            <div class="tpl-preview-large">
+              <svg width="100%" height="100%" viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <linearGradient id="tplG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient>
+                </defs>
+                <rect width="340" height="200" fill="url(#tplG1)"/>
+                <ellipse cx="270" cy="100" rx="90" ry="90" fill="#e8a020" opacity=".15"/>
+                <rect x="0" y="140" width="340" height="60" fill="#b5291e" opacity=".5"/>
+                <rect x="235" y="40" width="14" height="140" fill="#f5d78a" rx="3"/>
+                <rect x="225" y="40" width="34" height="8" fill="#f5d78a" rx="2"/>
+                <ellipse cx="242" cy="36" rx="18" ry="6" fill="#f5d78a"/>
+                <text x="24" y="88" font-size="10" fill="#ffe5b0" font-family="PingFang SC,Microsoft YaHei,sans-serif" opacity=".9">20XX YEAR</text>
+                <text x="24" y="114" font-size="19" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="600">党政工作汇报</text>
+                <text x="24" y="138" font-size="19" fill="#fff" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-weight="600">通用模板</text>
+                <rect x="24" y="152" width="70" height="22" rx="11" fill="rgba(255,255,255,.15)"/>
+                <text x="59" y="167" font-size="11" fill="#ffe" text-anchor="middle" font-family="PingFang SC,sans-serif">BY WPS</text>
+              </svg>
+            </div>
+            <div class="tpl-preview-grid">
+              <div class="tpl-grid-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="160" height="88" fill="#fdf8f0"/>
+                  <text x="80" y="14" font-size="9" fill="#888" text-anchor="middle">CONTENTS</text>
+                  <text x="80" y="26" font-size="11" fill="#333" text-anchor="middle" font-weight="600">目录</text>
+                  <rect x="10" y="34" width="65" height="8" rx="2" fill="#eee"/>
+                  <rect x="10" y="46" width="55" height="8" rx="2" fill="#eee"/>
+                  <rect x="85" y="34" width="65" height="8" rx="2" fill="#eee"/>
+                  <rect x="85" y="46" width="55" height="8" rx="2" fill="#eee"/>
+                  <rect x="10" y="58" width="65" height="8" rx="2" fill="#eee"/>
+                  <rect x="85" y="58" width="65" height="8" rx="2" fill="#eee"/>
+                </svg>
+              </div>
+              <div class="tpl-grid-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <defs><linearGradient id="tplG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+                  <rect width="160" height="88" fill="url(#tplG2)"/>
+                  <text x="80" y="30" font-size="22" fill="rgba(255,255,255,.3)" text-anchor="middle" font-weight="700">01</text>
+                  <rect x="20" y="46" width="80" height="12" rx="3" fill="rgba(255,255,255,.25)"/>
+                  <text x="60" y="56" font-size="8" fill="#fff" text-anchor="middle">单击此处添加章节标题</text>
+                </svg>
+              </div>
+              <div class="tpl-grid-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="160" height="88" fill="#fdf8f0"/>
+                  <rect x="10" y="12" width="90" height="10" rx="3" fill="#e8d5b0"/>
+                  <text x="55" y="21" font-size="8" fill="#c0392b" text-anchor="middle">单击此处添加标题</text>
+                  <rect x="10" y="28" width="140" height="6" rx="2" fill="#eee"/>
+                  <rect x="10" y="38" width="120" height="6" rx="2" fill="#eee"/>
+                  <rect x="10" y="48" width="130" height="6" rx="2" fill="#eee"/>
+                  <rect x="10" y="58" width="100" height="6" rx="2" fill="#eee"/>
+                </svg>
+              </div>
+              <div class="tpl-grid-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 160 88" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <defs><linearGradient id="tplG3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+                  <rect width="160" height="88" fill="url(#tplG3)"/>
+                  <text x="80" y="30" font-size="8" fill="rgba(255,255,255,.6)" text-anchor="middle">THE END</text>
+                  <text x="80" y="52" font-size="16" fill="#fff" text-anchor="middle" font-weight="600">谢谢观看</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <button id="tplGenerateBtn" class="tpl-gen-btn" type="button">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z"/></svg>
+            <span id="tplGenerateBtnLabel">开始生成PPT</span>
+          </button>
+
+          <div class="tpl-filter-row">
+            <div class="tpl-filter-tab active">全部</div>
+            <div class="tpl-filter-tab">总结汇报</div>
+            <div class="tpl-filter-tab">教育培训</div>
+            <div class="tpl-filter-tab">营销推广</div>
+            <div class="tpl-filter-tab">高校专区</div>
+            <div class="tpl-filter-tab">企业宣讲</div>
+            <div class="tpl-filter-tab">更多 ∨</div>
+            <div class="tpl-filter-right">
+              <div class="tpl-filter-btn">风格 ∨</div>
+              <div class="tpl-filter-btn">颜色 ∨</div>
+            </div>
+          </div>
+
+          <div class="tpl-grid">
+            <div class="tpl-card">
+              <div class="tpl-card-thumb selected">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <defs><linearGradient id="tplC1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#e74c3c"/></linearGradient></defs>
+                  <rect width="200" height="120" fill="url(#tplC1)"/>
+                  <ellipse cx="160" cy="60" rx="60" ry="60" fill="#e8a020" opacity=".12"/>
+                  <path d="M0 85 Q100 70 200 85 L200 120 L0 120 Z" fill="#b5291e" opacity=".5"/>
+                  <rect x="145" y="18" width="10" height="88" fill="#f5d78a" rx="2"/>
+                  <rect x="138" y="18" width="24" height="6" fill="#f5d78a" rx="1"/>
+                  <text x="16" y="52" font-size="6" fill="#ffe5b0">20XX YEAR</text>
+                  <text x="16" y="68" font-size="12" fill="#fff" font-weight="700">党政工作汇报</text>
+                  <text x="16" y="82" font-size="12" fill="#fff" font-weight="700">通用模板</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">党政风党政通用模板</div>
+            </div>
+            <div class="tpl-card">
+              <div class="tpl-card-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="200" height="120" fill="#1a2a3a"/>
+                  <ellipse cx="100" cy="60" rx="80" ry="80" fill="#234" opacity=".8"/>
+                  <text x="16" y="36" font-size="6" fill="#c8a050">20XX YEAR</text>
+                  <text x="16" y="58" font-size="14" fill="#fff" font-weight="700">蓝金色教育中国风</text>
+                  <text x="16" y="76" font-size="14" fill="#fff" font-weight="700">主题</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">蓝金色中国风主题</div>
+            </div>
+            <div class="tpl-card">
+              <div class="tpl-card-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="200" height="120" fill="#2ecc71"/>
+                  <rect x="0" y="0" width="8" height="120" fill="#27ae60"/>
+                  <ellipse cx="160" cy="40" rx="50" ry="50" fill="#fff" opacity=".1"/>
+                  <text x="16" y="32" font-size="6" fill="rgba(255,255,255,.7)">20XX YEAR</text>
+                  <text x="16" y="56" font-size="13" fill="#fff" font-weight="700">可爱童趣</text>
+                  <text x="16" y="72" font-size="13" fill="#fff" font-weight="700">主题班会模版</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">绿色班会卡通主题</div>
+            </div>
+            <div class="tpl-card">
+              <div class="tpl-card-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="200" height="120" fill="#e8f5e9"/>
+                  <path d="M0 0 Q50 20 0 40z" fill="#c8e6c9"/>
+                  <path d="M200 80 Q160 100 200 120z" fill="#c8e6c9"/>
+                  <text x="16" y="36" font-size="6" fill="#777">20XX YEAR</text>
+                  <text x="16" y="56" font-size="12" fill="#2e7d32" font-weight="600">文艺清新论文答辩</text>
+                  <text x="16" y="72" font-size="12" fill="#2e7d32" font-weight="600">模板</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">文艺清新论文答辩模板</div>
+            </div>
+            <div class="tpl-card">
+              <div class="tpl-card-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="200" height="120" fill="#1976d2"/>
+                  <ellipse cx="180" cy="20" rx="60" ry="60" fill="#1565c0" opacity=".6"/>
+                  <text x="16" y="36" font-size="6" fill="rgba(255,255,255,.7)">20XX YEAR</text>
+                  <text x="16" y="58" font-size="12" fill="#fff" font-weight="700">教育教学通用PPT</text>
+                  <text x="16" y="74" font-size="12" fill="#fff" font-weight="700">模板</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">教育教学通用PPT模板</div>
+            </div>
+            <div class="tpl-card">
+              <div class="tpl-card-thumb">
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <rect width="200" height="120" fill="#37474f"/>
+                  <rect x="0" y="80" width="200" height="40" fill="#263238"/>
+                  <text x="16" y="36" font-size="6" fill="rgba(255,255,255,.5)">20XX YEAR</text>
+                  <text x="16" y="58" font-size="12" fill="#fff" font-weight="700">职场日常</text>
+                  <text x="16" y="74" font-size="12" fill="#fff" font-weight="700">办公通用模版</text>
+                </svg>
+              </div>
+              <div class="tpl-card-label">职场日常办公通用模版</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 共享右栏 -->
+        <aside class="right-rail" data-rail="templates"></aside>
+      </div>
+    </section>
+
+    <!-- 账号登录 -->
+    <div id="authOverlay" class="auth-overlay hidden">
+      <form id="authForm" class="auth-panel">
+        <div class="auth-logo">WPS 灵犀</div>
+        <h2 id="authTitle" class="auth-title">登录账号</h2>
+        <div id="authError" class="auth-error hidden"></div>
+        <label class="auth-field">
+          <span>账号</span>
+          <input id="authUsername" type="text" autocomplete="username" placeholder="请输入账号" />
+        </label>
+        <label class="auth-field">
+          <span>密码</span>
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="至少 8 位" />
+        </label>
+        <button id="authSubmitBtn" class="auth-submit" type="submit">登录</button>
+        <button id="authModeBtn" class="auth-mode-btn" type="button">没有账号，创建一个</button>
+      </form>
+    </div>
+
+    <!-- 模态：图片预览 -->
+    <div id="imagePreviewModal" class="image-preview-modal hidden">
+      <button id="imagePreviewClose" class="image-preview-close" type="button" aria-label="关闭预览">×</button>
+      <img id="imagePreviewLarge" class="image-preview-large" src="" alt="预览大图" />
+    </div>
+
+    <!-- 模态：幻灯片预览 -->
+    <div id="slidePreviewModal" class="image-preview-modal hidden">
+      <button id="slidePreviewClose" class="image-preview-close" type="button" aria-label="关闭幻灯片预览">×</button>
+      <div id="slidePreviewContent" class="slide-preview-content"></div>
+    </div>
+
+    <template id="messageTemplate">
+      <div class="message-row">
+        <div class="message-bubble"></div>
+      </div>
+    </template>
+
+    <template id="rightRailTemplate">
+      <div class="rp-header">
+        <div class="rp-title"></div>
+        <div class="rp-sub">内容由 AI 生成</div>
+      </div>
+      <div class="rp-body">
+        <div class="rp-ppt-card hidden">
+          <div class="rp-ppt-icon">P</div>
+          <div class="rp-ppt-name"></div>
+          <div class="rp-ppt-thumb"></div>
+        </div>
+        <div class="rp-ai-text"></div>
+        <div class="rp-action-row">
+          <div class="rp-icon-btn" title="重新生成">↺</div>
+          <div class="rp-icon-btn" title="重做">↻</div>
+          <div class="rp-icon-btn" title="赞">👍</div>
+          <div class="rp-icon-btn" title="踩">👎</div>
+        </div>
+        <div class="rp-suggest-list"></div>
+      </div>
+      <div class="rp-chips">
+        <div class="rp-chip">📊 AI PPT</div>
+        <div class="rp-chip">✦ 长文写作</div>
+        <div class="rp-chip">✏ 快速创作</div>
+        <div class="rp-chip">⋮ 更多</div>
+      </div>
+      <div class="rp-input">
+        <input class="rp-input-field" type="text" placeholder="询问任何问题或者选择技能" />
+        <button class="rp-send" type="button" aria-label="发送">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="#999"><path d="M1 9L9 5 1 1v3l4 1-4 1z"/></svg>
+        </button>
+      </div>
+      <div class="rp-bottom-bar">
+        <span>＋</span>
+        <span>⊞ 技能</span>
+        <span>⊙ 深度思考</span>
+      </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="./js/index.js"></script>
+  </body>
+</html>
